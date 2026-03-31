@@ -14,7 +14,7 @@
   when: nginx_letsencrypt_enabled | bool
 
 - name: Deploy Custom SSL Certificates
-  ansible.builtin.include_tasks: "custom_ssl.yml"
+  ansible.builtin.include_tasks: "custom-certs.yml"
   when: nginx_custom_ssl_certificates | length > 0
 
 - name: Configure Upstreams

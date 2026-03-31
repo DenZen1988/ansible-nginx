@@ -24,8 +24,8 @@ galaxy_info:
   galaxy_tags:
     - nginx
     - webserver
-    - reverse_proxy
-    - load_balancer
+    - reverseproxy
+    - loadbalancer
     - ssl
     - letsencrypt
     - web

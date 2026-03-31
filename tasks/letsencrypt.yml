@@ -12,9 +12,9 @@
   ansible.builtin.command:
     cmd: >
       certbot certonly
-      {{ '--webroot -w ' item.webroot if item.webroot is defined else '--nginx' }}
+      {{ '--webroot -w ' ~ item.webroot if item.webroot is defined else '--nginx' }}
       -d {{ item.domain }}
-      {{ item.extra_domains | default([]) | map('regex_replace', ,^, '-d') | join(' ') }}
+      {{ item.extra_domains | default([]) | map('regex_replace', '^', '-d') | join(' ') }}
       --email {{ nginx_certbot_email }}
       {{ '--agree-tos' if nginx_certbot_agree_tos else '' }}
       --non-interactive
