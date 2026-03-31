@@ -1,9 +1,36 @@
 ---
-- name: (Package) Add official Nginx signing key
-  ansible.builtin.apt_key:
-    url: "{{ __nginx_repo_key_url }}"
+- name: (Package) Install GPG if needed for repo signing
+  ansible.builtin.apt:
+    name: gpg
     state: present
-  when: nginx_official_repo_enabled | bool
+    update_cache: true
+  when: nginx_official_repo | bool
+
+- name: (Package) Create keyrings directory
+  ansible.builtin.file:
+    path: /usr/share/keyrings
+    state: directory
+    mode: "0755"
+  when: nginx_official_repo | bool
+
+- name: (Package) Download official Nginx signing key
+  ansible.builtin.get_url:
+    url: "{{ __nginx_repo_key_url }}"
+    dest: /tmp/nginx_signing.key
+    mode: "0644"
+  when: nginx_official_repo | bool
+
+- name: (Package) Dearmor and install Nginx signing key
+  ansible.builtin.shell:
+    cmd: gpg --dearmor < /tmp/nginx_signing.key > /usr/share/keyrings/nginx-archive-keyring.gpg
+    creates: /usr/share/keyrings/nginx-archive-keyring.gpg
+  when: nginx_official_repo | bool
+
+- name: (Package) Set keyring permissions
+  ansible.builtin.file:
+    path: /usr/share/keyrings/nginx-archive-keyring.gpg
+    mode: "0644"
+  when: nginx_official_repo | bool
 
 - name: (Package) Add official Nginx repository
   ansible.builtin.apt_repository:
@@ -11,9 +38,9 @@
     state: present
     filename: nginx
     update_cache: true
-  when: nginx_official_repo_enabled | bool
+  when: nginx_official_repo | bool
 
-- name: (Package) Install Nginx packages
+- name: (Package) Install nginx packages
   ansible.builtin.apt:
     name: "{{ __nginx_packages + nginx_extra_packages }}"
     state: present
