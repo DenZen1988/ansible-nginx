@@ -1,6 +1,7 @@
 ---
 - name: Converge — reverse proxy with load balancing
   hosts: all
+  gather_facts: true
   become: true
   vars:
     nginx_install_method: "package"

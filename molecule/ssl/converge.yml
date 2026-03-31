@@ -2,6 +2,7 @@
 - name: Converge — SSL with mock Let's Encrypt + custom certs
   hosts: all
   become: true
+  gather_facts: true
   vars:
     nginx_install_method: "package"
     nginx_official_repo_enabled: false

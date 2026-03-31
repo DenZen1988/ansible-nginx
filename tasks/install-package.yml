@@ -3,7 +3,7 @@
   ansible.builtin.apt_key:
     url: "{{ __nginx_repo_key_url }}"
     state: present
-  when: nginx_official_repo_enabled_enabled | bool
+  when: nginx_official_repo_enabled | bool
 
 - name: (Package) Add official Nginx repository
   ansible.builtin.apt_repository:
@@ -11,7 +11,7 @@
     state: present
     filename: nginx
     update_cache: true
-  when: nginx_official_repo_enabled_enabled | bool
+  when: nginx_official_repo_enabled | bool
 
 - name: (Package) Install Nginx packages
   ansible.builtin.apt:

@@ -1,10 +1,11 @@
 ---
 - name: Converge - package install with basic vhost
   hosts: all
+  gather_facts: true
   become: true
   vars:
     nginx_install_method: "package"
-    nginx_official_repo_enabled_enabled: false  # Use distro packages for testing
+    nginx_official_repo_enabled: false  # Use distro packages for testing
     nginx_remove_default_vhost: true
     nginx_worker_processes: "auto"
     nginx_worker_connections: 1024

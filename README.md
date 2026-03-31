@@ -23,7 +23,7 @@ A production-ready, fully variable-driven Ansible role for Nginx on Debian/Ubunt
 | OS | Versions |
 | --- | --- |
 | Ubuntu | 20.04 (Focal), 22.04 (Jammy), 24.04 (Noble) |
-| Debian | 11 (Bullseye), 12 (Bookworm) |
+| Debian | 12 (Bookworm), Debian 13 (Trixie) |
 
 ## Requirements
 

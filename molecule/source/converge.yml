@@ -2,7 +2,7 @@
 - name: Converge — compile nginx from source
   hosts: all
   become: true
-
+  gather_facts: true
   vars:
     nginx_install_method: "source"
     nginx_source_version: "1.26.2"
