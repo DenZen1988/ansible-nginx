@@ -8,7 +8,7 @@
 nginx_install_method: "package"
 
 # Use the official nginx.org repo instead of distro packages
-nginx_official_repo_enabled: true
+nginx_official_repo: true
 
 # Only relevant when nginx_install_method: "source"
 nginx_source_version: "1.26.2"
@@ -55,9 +55,9 @@ nginx_pid: "/run/nginx.pid"
 nginx_error_log: "/var/log/nginx/error.log"
 nginx_error_log_level: "warn"
 
-# Additional top-level (main context) directives
+# Additional top-level (main context) directives — include semicolons where needed
 nginx_extra_main_directives: []
-#   - "worker_rlimit_nofile 65535"
+#   - "worker_rlimit_nofile 65535;"
 
 # Events context
 nginx_multi_accept: "on"
@@ -99,10 +99,15 @@ nginx_gzip_types:
   - "text/javascript"
   - "image/svg+xml"
 
-# Additional http context directives (maps, rate limits, etc.)
+# Additional http context directives (maps, rate limits, etc.) — include semicolons where needed
+# Note: multi-line blocks like map{} should use YAML literal blocks (|)
 nginx_extra_http_directives: []
-#   - "map $http_upgrade $connection_upgrade { default upgrade; '' close; }"
-#   - "limit_req_zone $binary_remote_addr zone=api:10m rate=10r/s"
+#   - |
+#     map $http_upgrade $connection_upgrade {
+#         default upgrade;
+#         '' close;
+#     }
+#   - "limit_req_zone $binary_remote_addr zone=api:10m rate=10r/s;"
 
 # Include patterns (relative to /etc/nginx/)
 nginx_conf_d_include: "conf.d/*.conf"

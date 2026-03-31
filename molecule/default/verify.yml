@@ -50,7 +50,7 @@
           - "'server_tokens off' in nginx_conf_content"
           - "'client_max_body_size 32m' in nginx_conf_content"
           - "'gzip on' in nginx_conf_content"
-          - "'map $http_x_forwarded_proto $real_scheme' in nginx_conf_content"
+          - "'server_names_hash_bucket_size 64' in nginx_conf_content"
         fail_msg: "nginx.conf missing expected directives"
 
     # ── Default vhost removed ──
