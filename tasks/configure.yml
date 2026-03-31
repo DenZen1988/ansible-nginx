@@ -20,7 +20,6 @@
     owner: root
     group: root
     mode: "0644"
-    validate: "nginx -t -c %s"
   notify: Reload nginx
 
 - name: Deploy proxy params snippet
