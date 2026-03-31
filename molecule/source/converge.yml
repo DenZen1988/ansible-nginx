@@ -36,6 +36,11 @@
               - "try_files $uri $uri/ =404"
 
   pre_tasks:
+    - name: Ensure document root exists for test content
+      ansible.builtin.file:
+        path: "/var/www/source-test.local/html"
+        state: "directory"
+        mode: "0755"
     - name: Create test content
       ansible.builtin.copy:
         content: "<html><body><h1>Source Build Test</h1></body></html>"

@@ -12,7 +12,7 @@
     nginx_ssl_enabled: true
     nginx_ssl_protocols: "TLSv1.2 TLSv1.3"
     nginx_ssl_dhparam: "/etc/nginx/ssl/dhparam.pem"
-    nginx_ssl_dhparam_bits: 1024  # small for speed in CI
+    nginx_ssl_dhparam_size: 1024  # small for speed in CI
     nginx_ssl_hsts: true
     nginx_ssl_hsts_max_age: 31536000
     nginx_ssl_hsts_include_subdomains: true
