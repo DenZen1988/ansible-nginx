@@ -1,0 +1,29 @@
+# {{ ansible_managed }}
+# Mozilla Intermediate TLS configuration
+
+ssl_protocols {{ nginx_ssl_protocols }};
+ssl_ciphers {{ nginx_ssl_ciphers }};
+ssl_prefer_server_ciphers {{ nginx_ssl_prefer_server_ciphers }};
+
+ssl_session_cache {{ nginx_ssl_session_cache }};
+ssl_session_timeout {{ nginx_ssl_session_timeout }};
+ssl_session_tickets {{ nginx_ssl_session_tickets }};
+
+{% if nginx_ssl_dhparam | length > 0 %}
+ssl_dhparam {{ nginx_ssl_dhparam }};
+{% endif %}
+
+{% if nginx_ssl_stapling | bool %}
+ssl_stapling on;
+ssl_stapling_verify {{ 'on' if nginx_ssl_stapling_verify else 'off' }};
+resolver 8.8.8.8 1.1.1.1 valid=300s;
+resolver_timeout 5s;
+{% endif %}
+
+{% if nginx_ssl_hsts | bool %}
+add_header Strict-Transport-Security "max-age={{ nginx_ssl_hsts_max_age }}{% if nginx_ssl_hsts_include_subdomains %}; includeSubDomains{% endif %}{% if nginx_ssl_hsts_preload %}; preload{% endif %}" always;
+{% endif %}
+
+{% for directive in nginx_ssl_extra_directives %}
+{{ directive }};
+{% endfor %}

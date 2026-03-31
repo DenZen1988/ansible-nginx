@@ -1,0 +1,9 @@
+---
+- name: Deploy Stream Proxy Configuration
+  ansible.builtin.template:
+    src: "stream.conf.j2"
+    dest: "{{ nginx_conf_dir }}/conf.d/stream.conf"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload Nginx

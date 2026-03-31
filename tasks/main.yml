@@ -1,0 +1,32 @@
+---
+- name: Install Nginx
+  ansible.builtin.include_tasks: "install-{{ nginx_install_method }}.yml"
+
+- name: Configure Nginx
+  ansible.builtin.include_tasks: "configure.yml"
+
+- name: Configure SSL
+  ansible.builtin.include_tasks: "ssl.yml"
+  when: nginx_ssl_enabled | bool
+
+- name: Configure Let's Encrypt
+  ansible.builtin.include_tasks: "letsencrypt.yml"
+  when: nginx_letsencrypt_enabled | bool
+
+- name: Deploy Custom SSL Certificates
+  ansible.builtin.include_tasks: "custom_ssl.yml"
+  when: nginx_custom_ssl_certificates | length > 0
+
+- name: Configure Upstreams
+  ansible.builtin.include_tasks: "upstreams.yml"
+  when: nginx_upstreams | length > 0
+
+- name: Configure Virtual Hosts
+  ansible.builtin.include_tasks: "vhosts.yml"
+
+- name: Configure Stream Proxy
+  ansible.builtin.include_tasks: "stream.yml"
+  when: nginx_stream_enabled | bool
+
+- name: Manage Nginx Service
+  ansible.builtin.include_tasks: "service.yml"

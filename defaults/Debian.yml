@@ -1,0 +1,6 @@
+---
+__nginx_packages:
+  - "nginx"
+
+__nginx_repo_key_url: "https://nginx.org/keys/nginx_signing.key"
+__nginx_repo: "deb https://nginx.org/packages{{ 'mainline/' if nginx_mainline | default(false) else '' }}{{ ansible_distribution | lower }}/ {{ ansible_distribution_release }} nginx"

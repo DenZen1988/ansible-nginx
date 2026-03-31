@@ -1,0 +1,12 @@
+---
+- name: Deploy Upstream configuration
+  ansible.builtin.template:
+    src: "upstreams.conf.j2"
+    dest: "{{ nginx_conf_dir }}/conf.d/upstreams_{{ item.name }}.conf"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: "{{ nginx_upstreams }}"
+  loop_control:
+    label: "{{ item.name }}"
+  notify: Reload Nginx

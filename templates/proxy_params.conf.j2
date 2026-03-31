@@ -1,0 +1,11 @@
+# {{ ansible_managed }}
+{% for header in nginx_proxy_headers %}
+{{ header }};
+{% endfor %}
+
+proxy_connect_timeout {{ nginx_proxy_connect_timeout }};
+proxy_send_timeout {{ nginx_proxy_send_timeout }};
+proxy_read_timeout {{ nginx_proxy_read_timeout }};
+proxy_buffering {{ nginx_proxy_buffering }};
+proxy_buffer_size {{ nginx_proxy_buffer_size }};
+proxy_buffers {{ nginx_proxy_buffers }};

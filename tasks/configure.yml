@@ -1,0 +1,60 @@
+---
+- name: Ensure configuration directories exists
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - "{{ nginx_conf_dir }}"
+    - "{{ nginx_conf_dir }}/conf.d"
+    - "{{ nginx_sites_available_dir }}"
+    - "{{ nginx_sites_enabled_dir }}"
+    - "{{ nginx_conf_dir }}/snippets"
+
+- name: Deploy main nginx.conf
+  ansible.builtin.template:
+    src: "nginx.conf.j2"
+    dest: "{{ nginx_conf_dir }}/nginx.conf"
+    owner: root
+    group: root
+    mode: "0644"
+    validate: "nginx -t -c %s"
+  notify: Reload Nginx
+
+- name: Deploy proxy params snippet
+  ansible.builtin.template:
+    src: "proxy_params.conf.j2"
+    dest: "{{ nginx_conf_dir }}/snippets/proxy_params.conf"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload Nginx
+
+- name: Deploy SSL params snippet
+  ansible.builtin.template:
+    src: "ssl_params.conf.j2"
+    dest: "{{ nginx_conf_dir }}/snippets/ssl_params.conf"
+    owner: root
+    group: root
+    mode: "0644"
+  when: nginx_ssl_enabled | bool
+  notify: Reload Nginx
+
+- name: Deploy stub status config
+  ansible.builtin.template:
+    src: "stub_status.conf.j2"
+    dest: "{{ nginx_conf_dir }}/conf.d/stub_status.conf"
+    owner: root
+    group: root
+    mode: "0644"
+  when: nginx_stub_status_enabled | bool
+  notify: Reload Nginx
+
+- name: Remove stub status config when disabled
+  ansible.builtin.file:
+    path: "{{ nginx_conf_dir }}/conf.d/stub_status.conf"
+    state: absent
+  when: not (nginx_stub_status_enabled | bool)
+  notify: Reload Nginx

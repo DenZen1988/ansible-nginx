@@ -1,0 +1,24 @@
+---
+- name: Deploy Custom SSL Certificates
+  ansible.builtin.copy:
+    src: "{{ item.certificate_src }}"
+    dest: "{{ item.certificate_dest }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: "{{ nginx_custom_ssl_certificates }}"
+  loop_control:
+    label: "{{ item.name }}"
+  notify: Reload Nginx
+
+- name: Deploy Custom SSL Private Keys
+  ansible.builtin.copy:
+    src: "{{ item.certificate_key_src }}"
+    dest: "{{ item.certificate_key_dest }}"
+    owner: root
+    group: root
+    mode: "0600"
+  loop: "{{ nginx_custom_ssl_certificates }}"
+  loop_control:
+    label: "{{ item.name }}"
+  notify: Reload Nginx

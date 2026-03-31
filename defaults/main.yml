@@ -1,0 +1,23 @@
+---
+# STUB STATUS / MONITORING
+
+nginx_stub_status_enabled: false
+nginx_stub_status_path: "/nginx_status"
+nginx_stub_status_allowed_ips:
+  - "127.0.0.1"
+
+# DIRECTORIES & PERMISSIONS
+nginx_conf_dir: "/etc/nginx"
+nginx_sites_available_dir: "{{ nginx_conf_dir }}/sites-available"
+nginx_sites_enabled_dir: "{{ nginx_conf_dir }}/sites-enabled"
+nginx_log_dir: "/var/log/nginx"
+
+# Create documents roots automatically
+nginx_create_docroots: true
+nginx_docroot_owner: "www-data"
+nginx_docroot_group: "www-data"
+nginx_docroot_mode: "0755"
+
+# Additional packages to install alongside nginx
+nginx_extra_packages: []
+# - "libnginx-mod-http-headers-more-filter"

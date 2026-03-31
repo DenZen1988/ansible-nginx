@@ -1,0 +1,32 @@
+---
+galaxy_info:
+  role_name: nginx
+  author: DenZen1988
+  description: >-
+    Production-ready Nginx role with full variable-driven configuration. Supports package install and source compiplation,
+    virtual hosts, SSL/TLS (Let's Encrypt and custom certificates), reverse proxy and load balancing.
+  license: MIT
+  min_ansible_version: "2.14"
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal  # 20.04
+        - jammy   # 22.04
+        - noble   # 24.04
+    - name: Debian
+      versions:
+        - bullseye  # 11
+        - bookworm  # 12
+        - trixie    # 13
+
+  galaxy_tags:
+    - nginx
+    - webserver
+    - reverse_proxy
+    - load_balancer
+    - ssl
+    - letsencrypt
+    - web
+
+dependencies: []
