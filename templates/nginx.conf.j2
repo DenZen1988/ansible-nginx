@@ -6,14 +6,14 @@ pid {{ nginx_pid }};
 error_log {{ nginx_error_log }} {{ nginx_error_log_level }};
 
 {% for directive in nginx_extra_main_directives %}
-{{ directive }};
+{{ directive }}
 {% endfor %}
 
 events {
     worker_connections {{ nginx_worker_connections }};
     multi_accept {{ nginx_multi_accept }};
 {% for directive in nginx_extra_events_directives %}
-    {{ directive }};
+    {{ directive }}
 {% endfor %}
 }
 
@@ -67,7 +67,7 @@ http {
 {% endif %}
 
 {% for directive in nginx_extra_http_directives %}
-    {{ directive }};
+    {{ directive }}
 {% endfor %}
 
     ##
