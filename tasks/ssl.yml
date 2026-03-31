@@ -15,4 +15,4 @@
     group: root
     mode: "0600"
   when: nginx_ssl_dhparam | length > 0
-  notify: Reload Nginx
+  notify: Reload nginx

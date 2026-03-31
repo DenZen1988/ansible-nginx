@@ -23,13 +23,13 @@
   loop: "{{ nginx_letsencrypt_certificates }}"
   loop_control:
     label: "{{ item.domain }}"
-  notify: Reload Nginx
+  notify: Reload nginx
 
 - name: Configure Certbot auto-renewal cron
   ansible.builtin.cron:
     name: "Certbot Auto-Renewal"
     hour: "{{ nginx_certbot_renewal_hour }}"
     minute: "{{ nginx_certbot_renewal_minute }}"
-    job: "certbot renew --quiet --post-hook 'systemctl reload nginx'"
+    job: "certbot renew --quiet --post-hook 'systemctl Reload nginx'"
     user: root
     state: "{{ 'present' if nginx_certbot_auto_renewal else 'absent' }}"

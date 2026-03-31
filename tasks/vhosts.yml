@@ -8,7 +8,7 @@
     - "{{ nginx_sites_enabled_dir }}/default"
     - "{{ nginx_conf_dir }}/conf.d/default.conf"
   when: nginx_remove_default_vhost | bool
-  notify: Reload Nginx
+  notify: Reload nginx
 
 - name: Create Document Roots
   ansible.builtin.file:
@@ -34,7 +34,7 @@
   loop: "{{ nginx_vhosts }}"
   loop_control:
     label: "{{ item.name }}"
-  notify: Reload Nginx
+  notify: Reload nginx
 
 - name: Enable vHosts (create symlinks)
   ansible.builtin.file:
@@ -45,7 +45,7 @@
   loop_control:
     label: "{{ item.name }}"
   when: item.enabled | default(true) | bool
-  notify: Reload Nginx
+  notify: Reload nginx
 
 - name: Disable vHosts (remove symlinks)
   ansible.builtin.file:
@@ -55,4 +55,4 @@
   loop_control:
     label: "{{ item.name }}"
   when: not (item.enabled | default(true) | bool)
-  notify: Reload Nginx
+  notify: Reload nginx

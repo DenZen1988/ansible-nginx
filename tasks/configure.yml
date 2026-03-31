@@ -21,7 +21,7 @@
     group: root
     mode: "0644"
     validate: "nginx -t -c %s"
-  notify: Reload Nginx
+  notify: Reload nginx
 
 - name: Deploy proxy params snippet
   ansible.builtin.template:
@@ -30,7 +30,7 @@
     owner: root
     group: root
     mode: "0644"
-  notify: Reload Nginx
+  notify: Reload nginx
 
 - name: Deploy SSL params snippet
   ansible.builtin.template:
@@ -40,7 +40,7 @@
     group: root
     mode: "0644"
   when: nginx_ssl_enabled | bool
-  notify: Reload Nginx
+  notify: Reload nginx
 
 - name: Deploy stub status config
   ansible.builtin.template:
@@ -50,11 +50,11 @@
     group: root
     mode: "0644"
   when: nginx_stub_status_enabled | bool
-  notify: Reload Nginx
+  notify: Reload nginx
 
 - name: Remove stub status config when disabled
   ansible.builtin.file:
     path: "{{ nginx_conf_dir }}/conf.d/stub_status.conf"
     state: absent
   when: not (nginx_stub_status_enabled | bool)
-  notify: Reload Nginx
+  notify: Reload nginx

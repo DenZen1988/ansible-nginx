@@ -9,4 +9,4 @@
   loop: "{{ nginx_upstreams }}"
   loop_control:
     label: "{{ item.name }}"
-  notify: Reload Nginx
+  notify: Reload nginx

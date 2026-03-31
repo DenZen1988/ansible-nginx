@@ -9,7 +9,7 @@
   loop: "{{ nginx_custom_ssl_certificates }}"
   loop_control:
     label: "{{ item.name }}"
-  notify: Reload Nginx
+  notify: Reload nginx
 
 - name: Deploy Custom SSL Private Keys
   ansible.builtin.copy:
@@ -21,4 +21,4 @@
   loop: "{{ nginx_custom_ssl_certificates }}"
   loop_control:
     label: "{{ item.name }}"
-  notify: Reload Nginx
+  notify: Reload nginx
