@@ -2,6 +2,7 @@
 galaxy_info:
   role_name: nginx
   author: DenZen1988
+  namespace: private
   description: >-
     Production-ready Nginx role with full variable-driven configuration. Supports package install and source compiplation,
     virtual hosts, SSL/TLS (Let's Encrypt and custom certificates), reverse proxy and load balancing.
