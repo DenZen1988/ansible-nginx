@@ -50,7 +50,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          path: ansible-role-nginx
+          path: ansible-nginx
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -72,7 +72,7 @@ jobs:
 
       - name: Run Molecule — ${{ matrix.scenario }}
         run: molecule test --scenario-name ${{ matrix.scenario }}
-        working-directory: ansible-role-nginx
+        working-directory: ansible-nginx
         env:
           PY_COLORS: "1"
           ANSIBLE_FORCE_COLOR: "1"

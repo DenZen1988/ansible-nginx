@@ -70,4 +70,4 @@
               - "try_files $uri $uri/ =404"
 
   roles:
-    - role: ansible-role-nginx
+    - role: ansible-nginx

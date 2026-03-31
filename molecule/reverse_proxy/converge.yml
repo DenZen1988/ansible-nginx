@@ -74,4 +74,4 @@
       - "127.0.0.1"
 
   roles:
-    - role: ansible-role-nginx
+    - role: ansible-nginx

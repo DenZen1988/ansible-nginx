@@ -42,7 +42,7 @@ ansible-galaxy install DenZen1988.nginx
 ### Git
 
 ```bash
-git clone https://github.com/DenZen1988/ansible-role-nginx.git roles/ansible-role-nginx
+git clone https://github.com/DenZen1988/ansible-nginx.git roles/ansible-nginx
 ```
 
 ## Quick Start
@@ -53,7 +53,7 @@ git clone https://github.com/DenZen1988/ansible-role-nginx.git roles/ansible-rol
 - hosts: webservers
   become: true
   roles:
-    - role: ansible-role-nginx
+    - role: ansible-nginx
 ```
 
 ### Static site with Let's Encrypt
@@ -202,7 +202,7 @@ To work around this, consider:
 ## Directory Structure
 
 ```text
-ansible-role-nginx/
+ansible-nginx/
 ├── defaults/main.yml        # All configurable variables
 ├── vars/Debian.yml           # OS-specific internals
 ├── tasks/
