@@ -5,7 +5,7 @@
   become: true
   vars:
     nginx_install_method: "package"
-    nginx_official_repo_enabled: false
+    nginx_official_repo_enabled_enabled: false
     nginx_remove_default_vhost: true
     nginx_client_max_body_size: "100m"
 
