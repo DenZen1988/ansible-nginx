@@ -56,6 +56,10 @@ platforms:
       - /run
       - /tmp
 
+provisioner:
+  env:
+    ANSIBLE_ROLES_PATH: "${MOLECULE_PROJECT_DIRECTORY}/.."
+
 verifier:
   name: ansible
 
