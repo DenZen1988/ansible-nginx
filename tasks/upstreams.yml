@@ -1,7 +1,7 @@
 ---
 - name: Deploy Upstream configuration
   ansible.builtin.template:
-    src: "upstreams.conf.j2"
+    src: "upstream.conf.j2"
     dest: "{{ nginx_conf_dir }}/conf.d/upstreams_{{ item.name }}.conf"
     owner: root
     group: root
