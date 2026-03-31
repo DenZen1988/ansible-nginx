@@ -1,18 +1,309 @@
 ---
+# =============================================================================
+# INSTALLATION
+# =============================================================================
+
+# "package" = install from apt/official nginx repo
+# "source"  = compile from source tarball
+nginx_install_method: "package"
+
+# Use the official nginx.org repo instead of distro packages
+nginx_official_repo: true
+
+# Only relevant when nginx_install_method: "source"
+nginx_source_version: "1.26.2"
+nginx_source_configure_flags:
+  - "--prefix=/etc/nginx"
+  - "--sbin-path=/usr/sbin/nginx"
+  - "--modules-path=/usr/lib64/nginx/modules"
+  - "--conf-path=/etc/nginx/nginx.conf"
+  - "--error-log-path=/var/log/nginx/error.log"
+  - "--http-log-path=/var/log/nginx/access.log"
+  - "--pid-path=/var/run/nginx.pid"
+  - "--lock-path=/var/run/nginx.lock"
+  - "--with-http_ssl_module"
+  - "--with-http_v2_module"
+  - "--with-http_realip_module"
+  - "--with-http_gzip_static_module"
+  - "--with-http_stub_status_module"
+  - "--with-stream"
+nginx_source_dependencies:
+  - build-essential
+  - libpcre3
+  - libpcre3-dev
+  - zlib1g-dev
+  - libssl-dev
+  - libgd-dev
+  - libgeoip-dev
+
+# =============================================================================
+# SERVICE
+# =============================================================================
+
+nginx_service_name: "nginx"
+nginx_service_state: "started"
+nginx_service_enabled: true
+
+# =============================================================================
+# MAIN CONFIGURATION (nginx.conf)
+# =============================================================================
+
+nginx_user: "www-data"
+nginx_worker_processes: "auto"
+nginx_worker_connections: 1024
+nginx_pid: "/run/nginx.pid"
+nginx_error_log: "/var/log/nginx/error.log"
+nginx_error_log_level: "warn"
+
+# Additional top-level (main context) directives
+nginx_extra_main_directives: []
+#   - "worker_rlimit_nofile 65535"
+
+# Events context
+nginx_multi_accept: "on"
+nginx_extra_events_directives: []
+
+# HTTP context
+nginx_sendfile: "on"
+nginx_tcp_nopush: "on"
+nginx_tcp_nodelay: "on"
+nginx_keepalive_timeout: 65
+nginx_keepalive_requests: 100
+nginx_types_hash_max_size: 2048
+nginx_server_tokens: "off"
+nginx_client_max_body_size: "64m"
+
+# Logging
+nginx_access_log: "/var/log/nginx/access.log"
+nginx_access_log_format: ""  # empty = use default "combined"
+
+# Custom log formats: { name: "format_string" }
+nginx_log_formats: {}
+#   main: '$remote_addr - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent"'
+#   json_combined: 'escape=json ...'
+
+# Gzip
+nginx_gzip: "on"
+nginx_gzip_vary: "on"
+nginx_gzip_proxied: "any"
+nginx_gzip_comp_level: 6
+nginx_gzip_min_length: 256
+nginx_gzip_types:
+  - "text/plain"
+  - "text/css"
+  - "application/json"
+  - "application/javascript"
+  - "text/xml"
+  - "application/xml"
+  - "application/xml+rss"
+  - "text/javascript"
+  - "image/svg+xml"
+
+# Additional http context directives (maps, rate limits, etc.)
+nginx_extra_http_directives: []
+#   - "map $http_upgrade $connection_upgrade { default upgrade; '' close; }"
+#   - "limit_req_zone $binary_remote_addr zone=api:10m rate=10r/s"
+
+# Include patterns (relative to /etc/nginx/)
+nginx_conf_d_include: "conf.d/*.conf"
+nginx_sites_enabled_include: "sites-enabled/*"
+
+# =============================================================================
+# UPSTREAM / LOAD BALANCING
+# =============================================================================
+
+nginx_upstreams: []
+# - name: "backend_app"
+#   strategy: "least_conn"          # round_robin (default) | least_conn | ip_hash | random
+#   keepalive: 32                   # optional
+#   servers:
+#     - "127.0.0.1:8080 weight=3"
+#     - "127.0.0.1:8081"
+#     - "127.0.0.1:8082 backup"
+
+# =============================================================================
+# VIRTUAL HOSTS / SERVER BLOCKS
+# =============================================================================
+
+# Whether to remove the default vhost shipped with nginx
+nginx_remove_default_vhost: true
+
+nginx_vhosts: []
+# Each item generates a server block in sites-available and optionally
+# symlinks it into sites-enabled.
+#
+# Minimal static site:
+# - name: "example.com"                     # filename & server_name
+#   listen: "80"
+#   server_name: "example.com www.example.com"
+#   root: "/var/www/example.com/html"
+#   index: "index.html index.htm"
+#   enabled: true
+#   extra_directives: []
+#   locations:
+#     - match: "/"
+#       directives:
+#         - "try_files $uri $uri/ =404"
+#
+# Full-featured example:
+# - name: "app.example.com"
+#   listen: "443 ssl http2"
+#   server_name: "app.example.com"
+#   root: "/var/www/app.example.com/html"
+#   index: "index.html"
+#   enabled: true
+#   access_log: "/var/log/nginx/app_access.log"
+#   error_log: "/var/log/nginx/app_error.log"
+#   ssl: true
+#   ssl_certificate: "/etc/letsencrypt/live/app.example.com/fullchain.pem"
+#   ssl_certificate_key: "/etc/letsencrypt/live/app.example.com/privkey.pem"
+#   extra_directives:
+#     - "client_max_body_size 100m"
+#   locations:
+#     - match: "/"
+#       directives:
+#         - "proxy_pass http://backend_app"
+#         - "proxy_set_header Host $host"
+#         - "proxy_set_header X-Real-IP $remote_addr"
+#         - "proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for"
+#         - "proxy_set_header X-Forwarded-Proto $scheme"
+#     - match: "~ /\\.ht"
+#       directives:
+#         - "deny all"
+#
+# HTTP → HTTPS redirect vhost:
+# - name: "example.com-redirect"
+#   listen: "80"
+#   server_name: "example.com www.example.com"
+#   enabled: true
+#   extra_directives:
+#     - "return 301 https://$host$request_uri"
+#   locations: []
+
+# =============================================================================
+# SSL / TLS GLOBAL SETTINGS
+# =============================================================================
+
+nginx_ssl_enabled: false
+
+# Protocols & ciphers (Mozilla Intermediate by default)
+nginx_ssl_protocols: "TLSv1.2 TLSv1.3"
+nginx_ssl_ciphers: "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384"
+nginx_ssl_prefer_server_ciphers: "on"
+nginx_ssl_session_cache: "shared:SSL:10m"
+nginx_ssl_session_timeout: "1d"
+nginx_ssl_session_tickets: "off"
+
+# OCSP Stapling
+nginx_ssl_stapling: true
+nginx_ssl_stapling_verify: true
+
+# Diffie-Hellman parameters (set path to enable, role generates if missing)
+nginx_ssl_dhparam: ""
+# nginx_ssl_dhparam: "/etc/nginx/ssl/dhparam.pem"
+nginx_ssl_dhparam_bits: 2048
+
+# HSTS
+nginx_ssl_hsts: true
+nginx_ssl_hsts_max_age: 63072000
+nginx_ssl_hsts_include_subdomains: true
+nginx_ssl_hsts_preload: false
+
+# Additional SSL directives
+nginx_ssl_extra_directives: []
+
+# =============================================================================
+# LET'S ENCRYPT / CERTBOT
+# =============================================================================
+
+nginx_letsencrypt_enabled: false
+nginx_certbot_package: "certbot"
+nginx_certbot_plugin_package: "python3-certbot-nginx"
+nginx_certbot_email: ""
+nginx_certbot_agree_tos: true
+nginx_certbot_staging: false   # set true for testing
+
+# Domains to issue certificates for
+nginx_letsencrypt_domains: []
+# - domain: "example.com"
+#   extra_domains:
+#     - "www.example.com"
+#   webroot: "/var/www/example.com/html"   # omit to use --nginx plugin
+
+# Auto-renewal cron
+nginx_certbot_auto_renew: true
+nginx_certbot_auto_renew_hour: 3
+nginx_certbot_auto_renew_minute: 30
+
+# =============================================================================
+# CUSTOM CERTIFICATES (non-Let's Encrypt)
+# =============================================================================
+
+nginx_custom_ssl_certificates: []
+# - name: "example.com"
+#   certificate_src: "files/certs/example.com.crt"    # local path
+#   certificate_key_src: "files/certs/example.com.key"
+#   certificate_dest: "/etc/nginx/ssl/example.com.crt"
+#   certificate_key_dest: "/etc/nginx/ssl/example.com.key"
+
+# =============================================================================
+# REVERSE PROXY GLOBAL DEFAULTS
+# =============================================================================
+
+nginx_proxy_headers:
+  - "proxy_set_header Host $host"
+  - "proxy_set_header X-Real-IP $remote_addr"
+  - "proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for"
+  - "proxy_set_header X-Forwarded-Proto $scheme"
+
+nginx_proxy_connect_timeout: 60
+nginx_proxy_send_timeout: 60
+nginx_proxy_read_timeout: 60
+nginx_proxy_buffering: "on"
+nginx_proxy_buffer_size: "4k"
+nginx_proxy_buffers: "8 4k"
+
+# WebSocket support (used when vhost location has websocket: true)
+nginx_proxy_websocket_headers:
+  - "proxy_http_version 1.1"
+  - "proxy_set_header Upgrade $http_upgrade"
+  - "proxy_set_header Connection $connection_upgrade"
+
+# =============================================================================
+# STREAM (TCP/UDP) PROXY
+# =============================================================================
+
+nginx_stream_enabled: false
+nginx_stream_directives: []
+# - |
+#   upstream db_backend {
+#       server 10.0.0.10:3306;
+#       server 10.0.0.11:3306;
+#   }
+#   server {
+#       listen 3306;
+#       proxy_pass db_backend;
+#   }
+
+# =============================================================================
 # STUB STATUS / MONITORING
+# =============================================================================
 
 nginx_stub_status_enabled: false
 nginx_stub_status_path: "/nginx_status"
 nginx_stub_status_allowed_ips:
   - "127.0.0.1"
 
+# =============================================================================
 # DIRECTORIES & PERMISSIONS
+# =============================================================================
+
 nginx_conf_dir: "/etc/nginx"
-nginx_sites_available_dir: "{{ nginx_conf_dir }}/sites-available"
-nginx_sites_enabled_dir: "{{ nginx_conf_dir }}/sites-enabled"
+nginx_sites_available_dir: "/etc/nginx/sites-available"
+nginx_sites_enabled_dir: "/etc/nginx/sites-enabled"
 nginx_log_dir: "/var/log/nginx"
 
-# Create documents roots automatically
+# Create document roots automatically
 nginx_create_docroots: true
 nginx_docroot_owner: "www-data"
 nginx_docroot_group: "www-data"
