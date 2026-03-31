@@ -1,0 +1,87 @@
+---
+- name: Verify — source compilation
+  hosts: all
+  become: true
+  tasks:
+    # ── Binary exists and works ──
+    - name: Check nginx binary exists
+      ansible.builtin.stat:
+        path: /usr/sbin/nginx
+      register: _nginx_bin
+
+    - name: Assert nginx binary is present
+      ansible.builtin.assert:
+        that:
+          - _nginx_bin.stat.exists
+          - _nginx_bin.stat.executable
+        fail_msg: "nginx binary not found at /usr/sbin/nginx"
+
+    # ── Compiled version matches ──
+    - name: Get nginx version
+      ansible.builtin.command:
+        cmd: nginx -v
+      changed_when: false
+      register: _nginx_version
+
+    - name: Assert correct version compiled
+      ansible.builtin.assert:
+        that: "'1.26.2' in _nginx_version.stderr"
+        fail_msg: "Expected nginx 1.26.2, got: {{ _nginx_version.stderr }}"
+
+    # ── Compiled with expected modules ──
+    - name: Get nginx compile flags
+      ansible.builtin.command:
+        cmd: nginx -V
+      changed_when: false
+      register: _nginx_V
+
+    - name: Assert SSL module compiled in
+      ansible.builtin.assert:
+        that:
+          - "'--with-http_ssl_module' in _nginx_V.stderr"
+          - "'--with-http_v2_module' in _nginx_V.stderr"
+          - "'--with-http_stub_status_module' in _nginx_V.stderr"
+        fail_msg: "nginx missing expected compile flags"
+
+    # ── Systemd unit deployed ──
+    - name: Check systemd service file exists
+      ansible.builtin.stat:
+        path: /etc/systemd/system/nginx.service
+      register: _service_file
+
+    - name: Assert systemd service file deployed
+      ansible.builtin.assert:
+        that: _service_file.stat.exists
+        fail_msg: "systemd service file not deployed for source build"
+
+    # ── Config valid ──
+    - name: Validate nginx config
+      ansible.builtin.command:
+        cmd: nginx -t
+      changed_when: false
+      register: _nginx_t
+      failed_when: _nginx_t.rc != 0
+
+    # ── Service running ──
+    - name: Gather service facts
+      ansible.builtin.service_facts:
+
+    - name: Assert nginx service is running
+      ansible.builtin.assert:
+        that:
+          - "'nginx.service' in ansible_facts.services"
+          - "ansible_facts.services['nginx.service'].state == 'running'"
+        fail_msg: "nginx service is not running after source install"
+
+    # ── Responds on port 80 ──
+    - name: Test nginx responds
+      ansible.builtin.uri:
+        url: "http://localhost/"
+        status_code: [200, 301, 404]
+        validate_certs: false
+      register: _http_response
+
+    - name: Assert nginx is responding
+      ansible.builtin.assert:
+        that: _http_response.status in [200, 301, 404]
+        fail_msg: "Source-compiled nginx not responding"

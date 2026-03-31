@@ -1,0 +1,54 @@
+---
+- name: Converge — compile nginx from source
+  hosts: all
+  become: true
+
+  vars:
+    nginx_install_method: "source"
+    nginx_source_version: "1.26.2"
+    nginx_remove_default_vhost: true
+
+    nginx_source_configure_flags:
+      - "--prefix=/etc/nginx"
+      - "--sbin-path=/usr/sbin/nginx"
+      - "--modules-path=/usr/lib64/nginx/modules"
+      - "--conf-path=/etc/nginx/nginx.conf"
+      - "--error-log-path=/var/log/nginx/error.log"
+      - "--http-log-path=/var/log/nginx/access.log"
+      - "--pid-path=/var/run/nginx.pid"
+      - "--lock-path=/var/run/nginx.lock"
+      - "--with-http_ssl_module"
+      - "--with-http_v2_module"
+      - "--with-http_realip_module"
+      - "--with-http_gzip_static_module"
+      - "--with-http_stub_status_module"
+
+    nginx_vhosts:
+      - name: "source-test.local"
+        listen: "80"
+        server_name: "source-test.local"
+        root: "/var/www/source-test.local/html"
+        index: "index.html"
+        enabled: true
+        locations:
+          - match: "/"
+            directives:
+              - "try_files $uri $uri/ =404"
+
+  pre_tasks:
+    - name: Create test content
+      ansible.builtin.copy:
+        content: "<html><body><h1>Source Build Test</h1></body></html>"
+        dest: "/var/www/source-test.local/html/index.html"
+        mode: "0644"
+      ignore_errors: true
+
+  roles:
+    - role: ansible-role-nginx
+
+  post_tasks:
+    - name: Ensure document root exists for test content
+      ansible.builtin.copy:
+        content: "<html><body><h1>Source Build Test</h1></body></html>"
+        dest: "/var/www/source-test.local/html/index.html"
+        mode: "0644"

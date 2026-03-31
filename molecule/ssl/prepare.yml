@@ -1,0 +1,75 @@
+---
+- name: Prepare — generate self-signed certificates (mock Let's Encrypt)
+  hosts: all
+  become: true
+  tasks:
+    - name: Install openssl
+      ansible.builtin.apt:
+        name: openssl
+        state: present
+        update_cache: true
+
+    # Mimic the Let's Encrypt directory structure
+    - name: Create Let's Encrypt live directory
+      ansible.builtin.file:
+        path: "/etc/letsencrypt/live/secure.test.local"
+        state: directory
+        mode: "0755"
+        recurse: true
+
+    - name: Generate self-signed private key
+      ansible.builtin.command:
+        cmd: >-
+          openssl genrsa -out /etc/letsencrypt/live/secure.test.local/privkey.pem 2048
+        creates: /etc/letsencrypt/live/secure.test.local/privkey.pem
+
+    - name: Generate self-signed certificate
+      ansible.builtin.command:
+        cmd: >-
+          openssl req -new -x509
+          -key /etc/letsencrypt/live/secure.test.local/privkey.pem
+          -out /etc/letsencrypt/live/secure.test.local/fullchain.pem
+          -days 365
+          -subj "/CN=secure.test.local/O=MoleculeTest"
+        creates: /etc/letsencrypt/live/secure.test.local/fullchain.pem
+
+    # Also create a custom cert pair for testing custom-certs task
+    - name: Create custom cert directory
+      ansible.builtin.file:
+        path: "/tmp/test-certs"
+        state: directory
+        mode: "0755"
+
+    - name: Generate custom private key
+      ansible.builtin.command:
+        cmd: >-
+          openssl genrsa -out /tmp/test-certs/custom.test.local.key 2048
+        creates: /tmp/test-certs/custom.test.local.key
+
+    - name: Generate custom certificate
+      ansible.builtin.command:
+        cmd: >-
+          openssl req -new -x509
+          -key /tmp/test-certs/custom.test.local.key
+          -out /tmp/test-certs/custom.test.local.crt
+          -days 365
+          -subj "/CN=custom.test.local/O=MoleculeTest"
+        creates: /tmp/test-certs/custom.test.local.crt
+
+    - name: Create document roots
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - /var/www/secure.test.local/html
+        - /var/www/custom.test.local/html
+
+    - name: Create test index pages
+      ansible.builtin.copy:
+        content: "<html><body><h1>{{ item.name }}</h1></body></html>"
+        dest: "{{ item.path }}"
+        mode: "0644"
+      loop:
+        - { name: "Secure Site", path: "/var/www/secure.test.local/html/index.html" }
+        - { name: "Custom Cert Site", path: "/var/www/custom.test.local/html/index.html" }

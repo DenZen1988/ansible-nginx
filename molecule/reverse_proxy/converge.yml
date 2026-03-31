@@ -1,0 +1,77 @@
+---
+- name: Converge — reverse proxy with load balancing
+  hosts: all
+  become: true
+  vars:
+    nginx_install_method: "package"
+    nginx_official_repo: false
+    nginx_remove_default_vhost: true
+    nginx_client_max_body_size: "100m"
+
+    # ── Rate limiting ──
+    nginx_extra_http_directives:
+      - "limit_req_zone $binary_remote_addr zone=test_limit:10m rate=50r/s"
+
+    # ── Upstreams ──
+    nginx_upstreams:
+      - name: "app_backend"
+        strategy: "least_conn"
+        keepalive: 16
+        servers:
+          - "127.0.0.1:8081 weight=3"
+          - "127.0.0.1:8082"
+
+      - name: "ws_backend"
+        strategy: "ip_hash"
+        servers:
+          - "127.0.0.1:8081"
+
+    # ── Proxy tuning ──
+    nginx_proxy_connect_timeout: 30
+    nginx_proxy_send_timeout: 120
+    nginx_proxy_read_timeout: 120
+    nginx_proxy_buffering: "on"
+    nginx_proxy_buffer_size: "8k"
+    nginx_proxy_buffers: "16 8k"
+
+    # ── Vhosts ──
+    nginx_vhosts:
+      # Main reverse proxy
+      - name: "proxy.test.local"
+        listen: "80"
+        server_name: "proxy.test.local localhost"
+        enabled: true
+        access_log: "/var/log/nginx/proxy_access.log"
+        error_log: "/var/log/nginx/proxy_error.log"
+        extra_directives:
+          - "client_max_body_size 100m"
+        locations:
+          # API with rate limiting
+          - match: "/api/"
+            directives:
+              - "limit_req zone=test_limit burst=20 nodelay"
+              - "proxy_pass http://app_backend/"
+              - "proxy_set_header Host $host"
+              - "proxy_set_header X-Real-IP $remote_addr"
+              - "proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for"
+              - "proxy_set_header X-Forwarded-Proto $scheme"
+
+          # WebSocket endpoint
+          - match: "/ws/"
+            proxy_pass: "http://ws_backend/"
+            websocket: true
+            directives:
+              - "proxy_read_timeout 3600s"
+
+          # Default proxy
+          - match: "/"
+            proxy_pass: "http://app_backend"
+            directives: []
+
+    # ── Monitoring ──
+    nginx_stub_status_enabled: true
+    nginx_stub_status_allowed_ips:
+      - "127.0.0.1"
+
+  roles:
+    - role: ansible-role-nginx

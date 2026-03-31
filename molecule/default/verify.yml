@@ -1,0 +1,170 @@
+---
+- name: Verify — default scenario
+  hosts: all
+  become: true
+  gather_facts: true
+  tasks:
+    # ── Package installed ──
+    - name: Check nginx package is installed
+      ansible.builtin.package:
+        name: nginx
+        state: present
+      check_mode: true
+      register: _pkg
+      failed_when: _pkg.changed
+
+    # ── Service running & enabled ──
+    - name: Gather service facts
+      ansible.builtin.service_facts:
+
+    - name: Assert nginx service is running
+      ansible.builtin.assert:
+        that:
+          - "'nginx.service' in ansible_facts.services"
+          - "ansible_facts.services['nginx.service'].state == 'running'"
+        fail_msg: "nginx service is not running"
+
+    # ── Config syntax valid ──
+    - name: Validate nginx configuration
+      ansible.builtin.command:
+        cmd: nginx -t
+      changed_when: false
+      register: _nginx_t
+      failed_when: _nginx_t.rc != 0
+
+    # ── Main nginx.conf checks ──
+    - name: Read nginx.conf
+      ansible.builtin.slurp:
+        src: /etc/nginx/nginx.conf
+      register: _nginx_conf
+
+    - name: Decode nginx.conf
+      ansible.builtin.set_fact:
+        nginx_conf_content: "{{ _nginx_conf.content | b64decode }}"
+
+    - name: Assert nginx.conf contains expected directives
+      ansible.builtin.assert:
+        that:
+          - "'worker_processes auto' in nginx_conf_content"
+          - "'server_tokens off' in nginx_conf_content"
+          - "'client_max_body_size 32m' in nginx_conf_content"
+          - "'gzip on' in nginx_conf_content"
+          - "'map $http_x_forwarded_proto $real_scheme' in nginx_conf_content"
+        fail_msg: "nginx.conf missing expected directives"
+
+    # ── Default vhost removed ──
+    - name: Check default vhost is absent
+      ansible.builtin.stat:
+        path: /etc/nginx/sites-enabled/default
+      register: _default_vhost
+
+    - name: Assert default vhost removed
+      ansible.builtin.assert:
+        that: not _default_vhost.stat.exists
+        fail_msg: "Default vhost still exists in sites-enabled"
+
+    # ── Test vhost deployed & enabled ──
+    - name: Check testsite available
+      ansible.builtin.stat:
+        path: /etc/nginx/sites-available/testsite.local.conf
+      register: _testsite_available
+
+    - name: Check testsite enabled (symlink)
+      ansible.builtin.stat:
+        path: /etc/nginx/sites-enabled/testsite.local.conf
+      register: _testsite_enabled
+
+    - name: Assert testsite vhost is deployed and enabled
+      ansible.builtin.assert:
+        that:
+          - _testsite_available.stat.exists
+          - _testsite_enabled.stat.exists
+          - _testsite_enabled.stat.islnk
+        fail_msg: "testsite.local vhost not properly deployed"
+
+    # ── Disabled vhost NOT in sites-enabled ──
+    - name: Check disabled site is not enabled
+      ansible.builtin.stat:
+        path: /etc/nginx/sites-enabled/disabled-site.local.conf
+      register: _disabled_site
+
+    - name: Assert disabled site is not enabled
+      ansible.builtin.assert:
+        that: not _disabled_site.stat.exists
+        fail_msg: "disabled-site.local should not be in sites-enabled"
+
+    # ── Vhost content check ──
+    - name: Read testsite vhost config
+      ansible.builtin.slurp:
+        src: /etc/nginx/sites-available/testsite.local.conf
+      register: _testsite_conf
+
+    - name: Assert vhost contains expected content
+      ansible.builtin.assert:
+        that:
+          - "'server_name testsite.local' in (_testsite_conf.content | b64decode)"
+          - "'try_files' in (_testsite_conf.content | b64decode)"
+          - "'expires 7d' in (_testsite_conf.content | b64decode)"
+        fail_msg: "testsite.local vhost content incorrect"
+
+    # ── Document root created ──
+    - name: Check document root exists
+      ansible.builtin.stat:
+        path: /var/www/testsite.local/html
+      register: _docroot
+
+    - name: Assert document root exists and is a directory
+      ansible.builtin.assert:
+        that:
+          - _docroot.stat.exists
+          - _docroot.stat.isdir
+        fail_msg: "Document root was not created"
+
+    # ── Proxy params snippet ──
+    - name: Check proxy params snippet exists
+      ansible.builtin.stat:
+        path: /etc/nginx/snippets/proxy_params.conf
+      register: _proxy_params
+
+    - name: Assert proxy params snippet deployed
+      ansible.builtin.assert:
+        that: _proxy_params.stat.exists
+        fail_msg: "proxy_params.conf snippet missing"
+
+    # ── Stub status ──
+    - name: Check stub status config exists
+      ansible.builtin.stat:
+        path: /etc/nginx/conf.d/stub_status.conf
+      register: _stub_status
+
+    - name: Assert stub status is deployed
+      ansible.builtin.assert:
+        that: _stub_status.stat.exists
+        fail_msg: "stub_status.conf not deployed"
+
+    # ── Nginx responds ──
+    - name: Test nginx responds on port 80
+      ansible.builtin.uri:
+        url: "http://localhost/"
+        status_code: [200, 301, 404]
+        validate_certs: false
+      register: _http_response
+
+    - name: Assert nginx is responding
+      ansible.builtin.assert:
+        that: _http_response.status in [200, 301, 404]
+        fail_msg: "nginx not responding on port 80"
+
+    # ── Stub status responds ──
+    - name: Test stub status endpoint
+      ansible.builtin.uri:
+        url: "http://127.0.0.1/nginx_status"
+        return_content: true
+      register: _stub_response
+
+    - name: Assert stub status returns data
+      ansible.builtin.assert:
+        that:
+          - _stub_response.status == 200
+          - "'Active connections' in _stub_response.content"
+        fail_msg: "stub_status endpoint not working"

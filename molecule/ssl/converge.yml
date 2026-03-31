@@ -1,0 +1,73 @@
+---
+- name: Converge — SSL with mock Let's Encrypt + custom certs
+  hosts: all
+  become: true
+  vars:
+    nginx_install_method: "package"
+    nginx_official_repo: false
+    nginx_remove_default_vhost: true
+
+    # ── SSL global ──
+    nginx_ssl_enabled: true
+    nginx_ssl_protocols: "TLSv1.2 TLSv1.3"
+    nginx_ssl_dhparam: "/etc/nginx/ssl/dhparam.pem"
+    nginx_ssl_dhparam_bits: 1024  # small for speed in CI
+    nginx_ssl_hsts: true
+    nginx_ssl_hsts_max_age: 31536000
+    nginx_ssl_hsts_include_subdomains: true
+    nginx_ssl_stapling: false  # can't test with self-signed
+
+    # ── Custom certs (copied from host filesystem) ──
+    nginx_custom_ssl_certificates:
+      - name: "custom.test.local"
+        certificate_src: "/tmp/test-certs/custom.test.local.crt"
+        certificate_key_src: "/tmp/test-certs/custom.test.local.key"
+        certificate_dest: "/etc/nginx/ssl/custom.test.local.crt"
+        certificate_key_dest: "/etc/nginx/ssl/custom.test.local.key"
+
+    # ── We skip letsencrypt task (certs mocked in prepare) ──
+    nginx_letsencrypt_enabled: false
+
+    # ── Vhosts ──
+    nginx_vhosts:
+      # HTTP → HTTPS redirect
+      - name: "secure-redirect"
+        listen: "80"
+        server_name: "secure.test.local custom.test.local"
+        enabled: true
+        extra_directives:
+          - "return 301 https://$host$request_uri"
+        locations: []
+
+      # HTTPS site using mocked LE cert
+      - name: "secure.test.local"
+        listen: "443 ssl"
+        server_name: "secure.test.local"
+        root: "/var/www/secure.test.local/html"
+        index: "index.html"
+        enabled: true
+        ssl: true
+        ssl_certificate: "/etc/letsencrypt/live/secure.test.local/fullchain.pem"
+        ssl_certificate_key: "/etc/letsencrypt/live/secure.test.local/privkey.pem"
+        locations:
+          - match: "/"
+            directives:
+              - "try_files $uri $uri/ =404"
+
+      # HTTPS site using custom cert
+      - name: "custom.test.local"
+        listen: "443 ssl"
+        server_name: "custom.test.local"
+        root: "/var/www/custom.test.local/html"
+        index: "index.html"
+        enabled: true
+        ssl: true
+        ssl_certificate: "/etc/nginx/ssl/custom.test.local.crt"
+        ssl_certificate_key: "/etc/nginx/ssl/custom.test.local.key"
+        locations:
+          - match: "/"
+            directives:
+              - "try_files $uri $uri/ =404"
+
+  roles:
+    - role: ansible-role-nginx
