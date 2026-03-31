@@ -1,16 +1,5 @@
 ---
-- name: Remove Default vHost
-  ansible.builtin.file:
-    path: "{{ item }}"
-    state: absent
-  loop:
-    - "{{ nginx_sites_available_dir }}/default"
-    - "{{ nginx_sites_enabled_dir }}/default"
-    - "{{ nginx_conf_dir }}/conf.d/default.conf"
-  when: nginx_remove_default_vhost | bool
-  notify: Reload nginx
-
-- name: Create Document Roots
+- name: Create document roots
   ansible.builtin.file:
     path: "{{ item.root }}"
     state: directory
@@ -24,9 +13,9 @@
     - nginx_create_docroots | bool
     - item.root is defined
 
-- name: Deploy vHost Configurations
+- name: Deploy vhost configurations
   ansible.builtin.template:
-    src: "vhost.conf.j2"
+    src: vhost.conf.j2
     dest: "{{ nginx_sites_available_dir }}/{{ item.name }}.conf"
     owner: root
     group: root
@@ -36,7 +25,7 @@
     label: "{{ item.name }}"
   notify: Reload nginx
 
-- name: Enable vHosts (create symlinks)
+- name: Enable vhosts (create symlinks)
   ansible.builtin.file:
     src: "{{ nginx_sites_available_dir }}/{{ item.name }}.conf"
     dest: "{{ nginx_sites_enabled_dir }}/{{ item.name }}.conf"
@@ -47,7 +36,7 @@
   when: item.enabled | default(true) | bool
   notify: Reload nginx
 
-- name: Disable vHosts (remove symlinks)
+- name: Disable vhosts (remove symlinks)
   ansible.builtin.file:
     path: "{{ nginx_sites_enabled_dir }}/{{ item.name }}.conf"
     state: absent

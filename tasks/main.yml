@@ -11,34 +11,39 @@
 - name: Load OS-specific variables
   ansible.builtin.include_vars: "{{ role_path }}/vars/{{ ansible_os_family }}.yml"
 
-- name: Install Nginx
+- name: Install nginx
   ansible.builtin.include_tasks: "install-{{ nginx_install_method }}.yml"
 
-- name: Configure Virtual Hosts
-  ansible.builtin.include_tasks: "vhosts.yml"
+- name: Configure directories and main nginx.conf
+  ansible.builtin.include_tasks: configure.yml
 
-- name: Configure Upstreams
-  ansible.builtin.include_tasks: "upstreams.yml"
+- name: Configure virtual hosts
+  ansible.builtin.include_tasks: vhosts.yml
+
+- name: Configure upstreams
+  ansible.builtin.include_tasks: upstreams.yml
   when: nginx_upstreams | length > 0
 
 - name: Configure SSL
-  ansible.builtin.include_tasks: "ssl.yml"
+  ansible.builtin.include_tasks: ssl.yml
   when: nginx_ssl_enabled | bool
 
 - name: Configure Let's Encrypt
-  ansible.builtin.include_tasks: "letsencrypt.yml"
+  ansible.builtin.include_tasks: letsencrypt.yml
   when: nginx_letsencrypt_enabled | bool
 
-- name: Deploy Custom SSL Certificates
-  ansible.builtin.include_tasks: "custom-certs.yml"
+- name: Deploy custom SSL certificates
+  ansible.builtin.include_tasks: custom-certs.yml
   when: nginx_custom_ssl_certificates | length > 0
 
-- name: Configure Nginx
-  ansible.builtin.include_tasks: "configure.yml"
-
-- name: Configure Stream Proxy
-  ansible.builtin.include_tasks: "stream.yml"
+- name: Configure stream proxy
+  ansible.builtin.include_tasks: stream.yml
   when: nginx_stream_enabled | bool
 
-- name: Manage Nginx Service
-  ansible.builtin.include_tasks: "service.yml"
+- name: Validate full nginx configuration
+  ansible.builtin.command:
+    cmd: nginx -t
+  changed_when: false
+
+- name: Manage nginx service
+  ansible.builtin.include_tasks: service.yml

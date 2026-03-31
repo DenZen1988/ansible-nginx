@@ -1,5 +1,5 @@
 ---
-- name: Ensure configuration directories exists
+- name: Ensure configuration directories exist
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
@@ -13,9 +13,19 @@
     - "{{ nginx_sites_enabled_dir }}"
     - "{{ nginx_conf_dir }}/snippets"
 
+- name: Remove default vhost files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ nginx_sites_enabled_dir }}/default"
+    - "{{ nginx_sites_available_dir }}/default"
+    - "{{ nginx_conf_dir }}/conf.d/default.conf"
+  when: nginx_remove_default_vhost | bool
+
 - name: Deploy main nginx.conf
   ansible.builtin.template:
-    src: "nginx.conf.j2"
+    src: nginx.conf.j2
     dest: "{{ nginx_conf_dir }}/nginx.conf"
     owner: root
     group: root
@@ -24,7 +34,7 @@
 
 - name: Deploy proxy params snippet
   ansible.builtin.template:
-    src: "proxy_params.conf.j2"
+    src: proxy_params.conf.j2
     dest: "{{ nginx_conf_dir }}/snippets/proxy_params.conf"
     owner: root
     group: root
@@ -33,7 +43,7 @@
 
 - name: Deploy SSL params snippet
   ansible.builtin.template:
-    src: "ssl_params.conf.j2"
+    src: ssl_params.conf.j2
     dest: "{{ nginx_conf_dir }}/snippets/ssl_params.conf"
     owner: root
     group: root
@@ -43,7 +53,7 @@
 
 - name: Deploy stub status config
   ansible.builtin.template:
-    src: "stub_status.conf.j2"
+    src: stub_status.conf.j2
     dest: "{{ nginx_conf_dir }}/conf.d/stub_status.conf"
     owner: root
     group: root
