@@ -3,6 +3,7 @@
   hosts: all
   become: true
   gather_facts: true
+
   tasks:
     # ── Package installed ──
     - name: Check nginx package is installed
@@ -134,7 +135,7 @@
     # ── Stub status ──
     - name: Check stub status config exists
       ansible.builtin.stat:
-        path: /etc/nginx/conf.d/stub_status.conf
+        path: /etc/nginx/sites-available/stub_status.conf
       register: _stub_status
 
     - name: Assert stub status is deployed

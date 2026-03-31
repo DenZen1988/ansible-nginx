@@ -54,16 +54,28 @@
 - name: Deploy stub status config
   ansible.builtin.template:
     src: stub_status.conf.j2
-    dest: "{{ nginx_conf_dir }}/conf.d/stub_status.conf"
+    dest: "{{ nginx_sites_available_dir }}/stub_status.conf"
     owner: root
     group: root
     mode: "0644"
   when: nginx_stub_status_enabled | bool
   notify: Reload nginx
 
+- name: Enable stub status config
+  ansible.builtin.file:
+    src: "{{ nginx_sites_available_dir }}/stub_status.conf"
+    dest: "{{ nginx_sites_enabled_dir }}/stub_status.conf"
+    state: link
+  when: nginx_stub_status_enabled | bool
+  notify: Reload nginx
+
 - name: Remove stub status config when disabled
   ansible.builtin.file:
-    path: "{{ nginx_conf_dir }}/conf.d/stub_status.conf"
+    path: "{{ item }}"
     state: absent
+  loop:
+    - "{{ nginx_sites_enabled_dir }}/stub_status.conf"
+    - "{{ nginx_sites_available_dir }}/stub_status.conf"
+    - "{{ nginx_conf_dir }}/conf.d/stub_status.conf"
   when: not (nginx_stub_status_enabled | bool)
   notify: Reload nginx
