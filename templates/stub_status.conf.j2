@@ -1,0 +1,14 @@
+# {{ ansible_managed }}
+
+server {
+    listen 127.0.0.1:80;
+    server_name localhost;
+
+    location {{ nginx_stub_status_path }} {
+        stub_status;
+{% for ip in nginx_stub_status_allowed_ips %}
+        allow {{ ip }};
+{% endfor %}
+        deny all;
+    }
+}

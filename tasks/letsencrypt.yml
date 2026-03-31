@@ -1,0 +1,35 @@
+---
+- name: Install Certbot Packages
+  ansible.builtin.apt:
+    name:
+      - "{{ nginx_certbot_package }}"
+      - "{{ nginx_certbot_plugin_package }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Obtain Let's Encrypt SSL Certificates
+  ansible.builtin.command:
+    cmd: >
+      certbot certonly
+      {{ '--webroot -w ' item.webroot if item.webroot is defined else '--nginx' }}
+      -d {{ item.domain }}
+      {{ item.extra_domains | default([]) | map('regex_replace', ,^, '-d') | join(' ') }}
+      --email {{ nginx_certbot_email }}
+      {{ '--agree-tos' if nginx_certbot_agree_tos else '' }}
+      --non-interactive
+      {{ '--staging' if nginx_certbot_staging else '' }}
+    creates: "/etc/letsencrypt/live/{{ item.domain }}/fullchain.pem"
+  loop: "{{ nginx_letsencrypt_certificates }}"
+  loop_control:
+    label: "{{ item.domain }}"
+  notify: Reload Nginx
+
+- name: Configure Certbot auto-renewal cron
+  ansible.builtin.cron:
+    name: "Certbot Auto-Renewal"
+    hour: "{{ nginx_certbot_renewal_hour }}"
+    minute: "{{ nginx_certbot_renewal_minute }}"
+    job: "certbot renew --quiet --post-hook 'systemctl reload nginx'"
+    user: root
+    state: "{{ 'present' if nginx_certbot_auto_renewal else 'absent' }}"

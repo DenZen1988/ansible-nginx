@@ -1,0 +1,71 @@
+---
+- name: Prepare — start mock backend servers
+  hosts: all
+  become: true
+  tasks:
+    - name: Install python3
+      ansible.builtin.apt:
+        name: python3
+        state: present
+        update_cache: true
+
+    - name: Create backend response directory
+      ansible.builtin.file:
+        path: "/opt/backend/{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - app1
+        - app2
+
+    - name: Create backend response files
+      ansible.builtin.copy:
+        content: '{"server": "{{ item.name }}", "status": "ok"}'
+        dest: "/opt/backend/{{ item.name }}/index.html"
+        mode: "0644"
+      loop:
+        - { name: "app1" }
+        - { name: "app2" }
+
+    # Start two simple HTTP backends using Python
+    - name: Create backend systemd services
+      ansible.builtin.copy:
+        content: |
+          [Unit]
+          Description=Mock backend {{ item.name }}
+          After=network.target
+
+          [Service]
+          Type=simple
+          WorkingDirectory=/opt/backend/{{ item.name }}
+          ExecStart=/usr/bin/python3 -m http.server {{ item.port }}
+          Restart=always
+
+          [Install]
+          WantedBy=multi-user.target
+        dest: "/etc/systemd/system/backend-{{ item.name }}.service"
+        mode: "0644"
+      loop:
+        - { name: "app1", port: 8081 }
+        - { name: "app2", port: 8082 }
+
+    - name: Reload systemd
+      ansible.builtin.systemd:
+        daemon_reload: true
+
+    - name: Start backend services
+      ansible.builtin.systemd:
+        name: "backend-{{ item }}.service"
+        state: started
+        enabled: true
+      loop:
+        - app1
+        - app2
+
+    - name: Wait for backends to be ready
+      ansible.builtin.wait_for:
+        port: "{{ item }}"
+        timeout: 15
+      loop:
+        - 8081
+        - 8082

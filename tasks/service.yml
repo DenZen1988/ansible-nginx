@@ -1,0 +1,6 @@
+---
+- name: Ensure Nginx Service is running and enabled
+  ansible.builtin.service:
+    name: "{{ nginx_service_name }}"
+    state: "{{ nginx_service_state }}"
+    enabled: "{{ nginx_service_enabled }}"

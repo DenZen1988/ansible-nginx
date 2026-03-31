@@ -1,0 +1,122 @@
+---
+- name: Verify — SSL configuration
+  hosts: all
+  become: true
+  tasks:
+    # ── Config valid ──
+    - name: Validate nginx config
+      ansible.builtin.command:
+        cmd: nginx -t
+      changed_when: false
+      failed_when: _nginx_t.rc != 0
+      register: _nginx_t
+
+    # ── SSL snippet deployed ──
+    - name: Check SSL params snippet
+      ansible.builtin.stat:
+        path: /etc/nginx/snippets/ssl_params.conf
+      register: _ssl_params
+
+    - name: Assert SSL snippet exists
+      ansible.builtin.assert:
+        that: _ssl_params.stat.exists
+        fail_msg: "ssl_params.conf snippet not deployed"
+
+    # ── SSL snippet content ──
+    - name: Read SSL params snippet
+      ansible.builtin.slurp:
+        src: /etc/nginx/snippets/ssl_params.conf
+      register: _ssl_content
+
+    - name: Assert SSL snippet has expected directives
+      ansible.builtin.assert:
+        that:
+          - "'TLSv1.2 TLSv1.3' in (_ssl_content.content | b64decode)"
+          - "'ssl_prefer_server_ciphers on' in (_ssl_content.content | b64decode)"
+          - "'ssl_session_tickets off' in (_ssl_content.content | b64decode)"
+          - "'Strict-Transport-Security' in (_ssl_content.content | b64decode)"
+        fail_msg: "SSL snippet missing expected directives"
+
+    # ── DH params generated ──
+    - name: Check DH params file
+      ansible.builtin.stat:
+        path: /etc/nginx/ssl/dhparam.pem
+      register: _dhparam
+
+    - name: Assert DH params exist
+      ansible.builtin.assert:
+        that:
+          - _dhparam.stat.exists
+          - _dhparam.stat.size > 0
+        fail_msg: "dhparam.pem not generated"
+
+    # ── Custom cert deployed ──
+    - name: Check custom certificate
+      ansible.builtin.stat:
+        path: /etc/nginx/ssl/custom.test.local.crt
+      register: _custom_cert
+
+    - name: Check custom key
+      ansible.builtin.stat:
+        path: /etc/nginx/ssl/custom.test.local.key
+      register: _custom_key
+
+    - name: Assert custom certs deployed
+      ansible.builtin.assert:
+        that:
+          - _custom_cert.stat.exists
+          - _custom_key.stat.exists
+          - _custom_key.stat.mode == "0600"
+        fail_msg: "Custom certificates not properly deployed"
+
+    # ── HTTPS redirect vhost ──
+    - name: Read redirect vhost
+      ansible.builtin.slurp:
+        src: /etc/nginx/sites-available/secure-redirect.conf
+      register: _redirect_conf
+
+    - name: Assert redirect vhost has 301
+      ansible.builtin.assert:
+        that: "'return 301 https://' in (_redirect_conf.content | b64decode)"
+        fail_msg: "HTTP redirect vhost missing 301"
+
+    # ── SSL vhosts include ssl_params ──
+    - name: Read secure vhost
+      ansible.builtin.slurp:
+        src: /etc/nginx/sites-available/secure.test.local.conf
+      register: _secure_conf
+
+    - name: Assert secure vhost has SSL config
+      ansible.builtin.assert:
+        that:
+          - "'ssl_certificate' in (_secure_conf.content | b64decode)"
+          - "'ssl_certificate_key' in (_secure_conf.content | b64decode)"
+          - "'ssl_params.conf' in (_secure_conf.content | b64decode)"
+        fail_msg: "SSL vhost missing certificate directives"
+
+    # ── HTTPS responds ──
+    - name: Test HTTPS responds on port 443
+      ansible.builtin.uri:
+        url: "https://localhost/"
+        status_code: [200, 301, 404]
+        validate_certs: false
+      register: _https_response
+
+    - name: Assert HTTPS is working
+      ansible.builtin.assert:
+        that: _https_response.status in [200, 301, 404]
+        fail_msg: "nginx not responding on HTTPS"
+
+    # ── HTTP redirects to HTTPS ──
+    - name: Test HTTP redirects
+      ansible.builtin.uri:
+        url: "http://localhost/"
+        follow_redirects: none
+        status_code: [301]
+        validate_certs: false
+      register: _redirect_response
+
+    - name: Assert HTTP returns 301
+      ansible.builtin.assert:
+        that: _redirect_response.status == 301
+        fail_msg: "HTTP is not redirecting to HTTPS"

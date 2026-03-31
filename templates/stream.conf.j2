@@ -1,0 +1,5 @@
+# {{ ansible_managed }}
+
+{% for block in nginx_stream_directives %}
+{{ block }}
+{% endfor %}

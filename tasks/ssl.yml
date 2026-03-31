@@ -1,0 +1,18 @@
+---
+- name: Ensure SSL directory exists
+  ansible.builtin.file:
+    path: "{{ nginx_conf_dir }}/ssl"
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Generate Diffie-Hellman parameters
+  community.crypto.openssl_dhparam:
+    path: "{{ nginx_ssl_dhparam }}"
+    size: "{{ nginx_ssl_dhparam_size }}"
+    owner: root
+    group: root
+    mode: "0600"
+  when: nginx_ssl_dhparam | length > 0
+  notify: Reload Nginx

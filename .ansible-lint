@@ -1,0 +1,15 @@
+---
+profile: production
+
+exclude_paths:
+  - molecule/
+  - .github/
+  - examples/
+
+skip_list:
+  - yaml[line-length]
+  - name[template]
+
+warn_list:
+  - no-handler
+  - command-instead-of-module

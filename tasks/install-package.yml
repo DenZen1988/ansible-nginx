@@ -1,0 +1,21 @@
+---
+- name: (Package) Add official Nginx signing key
+  ansible.builtin.apt_key:
+    url: "{{ __nginx_repo_key_url }}"
+    state: present
+  when: nginx_official_repo_enabled | bool
+
+- name: (Package) Add official Nginx repository
+  ansible.builtin.apt_repository:
+    repo: "{{ __nginx_repo }}"
+    state: present
+    filename: nginx
+    update_cache: true
+  when: nginx_official_repo_enabled | bool
+
+- name: (Package) Install Nginx packages
+  ansible.builtin.apt:
+    name: "{{ __nginx_packages + nginx_extra_packages }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600

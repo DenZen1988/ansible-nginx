@@ -1,0 +1,20 @@
+# {{ ansible_managed }}
+# Upstream: {{ item.name }}
+
+upstream {{ item.name }} {
+{% if item.strategy | default('round_robin') == 'least_conn' %}
+    least_conn;
+{% elif item.strategy | default('round_robin') == 'ip_hash' %}
+    ip_hash;
+{% elif item.strategy | default('round_robin') == 'random' %}
+    random;
+{% endif %}
+
+{% if item.keepalive is defined %}
+    keepalive {{ item.keepalive }};
+{% endif %}
+
+{% for server in item.servers %}
+    server {{ server }};
+{% endfor %}
+}
