@@ -134,7 +134,7 @@ All variables are defined in `defaults/main.yml` with sensible defaults. Here is
 | Variable | Default | Description |
 | --- | --- | --- |
 | `nginx_install_method` | `"package"` | `"package"` or `"source"` |
-| `nginx_official_repo` | `true` | Use nginx.org repo instead of distro packages |
+| `nginx_official_repo_enabled` | `true` | Use nginx.org repo instead of distro packages |
 | `nginx_source_version` | `"1.26.2"` | Version to compile (source only) |
 | `nginx_extra_packages` | `[]` | Additional apt packages to install |
 

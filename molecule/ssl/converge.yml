@@ -4,7 +4,7 @@
   become: true
   vars:
     nginx_install_method: "package"
-    nginx_official_repo: false
+    nginx_official_repo_enabled: false
     nginx_remove_default_vhost: true
 
     # ── SSL global ──
