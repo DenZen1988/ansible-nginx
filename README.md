@@ -1,6 +1,6 @@
 # Ansible Role: Nginx
 
-![CI](https://github.com/DenZen1988/ansible-role-nginx/actions/workflows/ci.yml/badge.svg)
+[![CI](https://github.com/DenZen1988/ansible-nginx/actions/workflows/ci.yml/badge.svg)](https://github.com/DenZen1988/ansible-nginx/actions/workflows/ci.yml)
 
 A production-ready, fully variable-driven Ansible role for Nginx on Debian/Ubuntu.
 
