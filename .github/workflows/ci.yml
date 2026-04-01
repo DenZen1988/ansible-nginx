@@ -22,12 +22,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Install lint dependencies
-        run: pip install --break-system-packages yamllint ansible-lint
+      - name: Set up venv and install lint dependencies
+        run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip
+          pip install yamllint ansible-lint
       - name: Run yamllint
-        run: yamllint .
+        run: |
+          source .venv/bin/activate
+          yamllint .
       - name: Run ansible-lint
-        run: ansible-lint
+        run: |
+          source .venv/bin/activate
+          ansible-lint
 
   molecule:
     name: "Molecule (${{ matrix.scenario }})"
@@ -48,10 +56,12 @@ jobs:
         with:
           path: ansible-nginx
 
-      - name: Install dependencies
+      - name: Set up venv and install dependencies
         run: |
-          pip install --break-system-packages --upgrade pip
-          pip install --break-system-packages \
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip
+          pip install \
             molecule \
             molecule-plugins[docker] \
             ansible \
@@ -59,10 +69,13 @@ jobs:
 
       - name: Install Ansible Galaxy dependencies
         run: |
+          source .venv/bin/activate
           ansible-galaxy collection install community.crypto community.general
 
       - name: Run Molecule — ${{ matrix.scenario }}
-        run: molecule test --scenario-name ${{ matrix.scenario }}
+        run: |
+          source .venv/bin/activate
+          molecule test --scenario-name ${{ matrix.scenario }}
         working-directory: ansible-nginx
         env:
           PY_COLORS: "1"
