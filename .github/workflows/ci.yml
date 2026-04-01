@@ -22,12 +22,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
       - name: Install lint dependencies
-        run: pip install yamllint ansible-lint
+        run: pip install --break-system-packages yamllint ansible-lint
       - name: Run yamllint
         run: yamllint .
       - name: Run ansible-lint
@@ -52,15 +48,10 @@ jobs:
         with:
           path: ansible-nginx
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
       - name: Install dependencies
         run: |
-          pip install --upgrade pip
-          pip install \
+          pip install --break-system-packages --upgrade pip
+          pip install --break-system-packages \
             molecule \
             molecule-plugins[docker] \
             ansible \
