@@ -22,6 +22,7 @@
         cmd: >-
           openssl genrsa -out /etc/letsencrypt/live/secure.test.local/privkey.pem 2048
         creates: /etc/letsencrypt/live/secure.test.local/privkey.pem
+      delegate_to: localhost
 
     - name: Generate self-signed certificate
       ansible.builtin.command:
@@ -32,6 +33,7 @@
           -days 365
           -subj "/CN=secure.test.local/O=MoleculeTest"
         creates: /etc/letsencrypt/live/secure.test.local/fullchain.pem
+      delegate_to: localhost
 
     # Also create a custom cert pair for testing custom-certs task
     - name: Create custom cert directory
