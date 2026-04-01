@@ -45,6 +45,7 @@
         cmd: >-
           openssl genrsa -out /tmp/test-certs/custom.test.local.key 2048
         creates: /tmp/test-certs/custom.test.local.key
+      delegate_to: localhost
 
     - name: Generate custom certificate
       ansible.builtin.command:
@@ -55,6 +56,7 @@
           -days 365
           -subj "/CN=custom.test.local/O=MoleculeTest"
         creates: /tmp/test-certs/custom.test.local.crt
+      delegate_to: localhost
 
     - name: Create document roots
       ansible.builtin.file:
