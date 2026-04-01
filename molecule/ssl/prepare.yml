@@ -39,6 +39,7 @@
         path: "/tmp/test-certs"
         state: directory
         mode: "0755"
+      delegate_to: localhost
 
     - name: Generate custom private key
       ansible.builtin.command:
