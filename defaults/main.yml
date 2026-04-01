@@ -107,7 +107,7 @@ nginx_extra_http_directives: []
 #         default upgrade;
 #         '' close;
 #     }
-#   - "limit_req_zone $binary_remote_addr zone=api:10m rate=10r/s;"
+#   - "limit_req_zone $binary_remote_addr zone=api:10m rate=10r/s"
 
 # Include patterns (relative to /etc/nginx/)
 nginx_conf_d_include: "conf.d/*.conf"
