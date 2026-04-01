@@ -30,6 +30,7 @@
     # ── Proxy tuning ──
     nginx_proxy_connect_timeout: 30
     nginx_proxy_send_timeout: 120
+    nginx_proxy_read_timeout: 120
     nginx_proxy_buffering: "on"
     nginx_proxy_buffer_size: "8k"
     nginx_proxy_buffers: "16 8k"
@@ -60,8 +61,7 @@
           - match: "/ws/"
             proxy_pass: "http://ws_backend/"
             websocket: true
-            directives:
-              - "proxy_read_timeout 3600s"
+            directives: []
 
           # Default proxy
           - match: "/"
