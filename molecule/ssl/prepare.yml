@@ -33,6 +33,13 @@
           -subj "/CN=secure.test.local/O=MoleculeTest"
         creates: /etc/letsencrypt/live/secure.test.local/fullchain.pem
 
+    - name: Clean stale test certs from controller
+      ansible.builtin.file:
+        path: "/tmp/test-certs"
+        state: absent
+      delegate_to: localhost
+      become: false
+
     # Also create a custom cert pair for testing custom-certs task
     - name: Create custom cert directory
       ansible.builtin.file:
