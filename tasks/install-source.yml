@@ -50,7 +50,7 @@
     mode: "0644"
   notify:
     - Reload systemd
-    - Restart Nginx
+    - Restart nginx
 
 - name: (Source) Create Nginx User
   ansible.builtin.user:

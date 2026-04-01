@@ -6,10 +6,10 @@
       - "!min"
       - "distribution"
       - "os_family"
-  when: ansible_os_family is not defined
+  when: ansible_facts['os_family'] is not defined
 
 - name: Load OS-specific variables
-  ansible.builtin.include_vars: "{{ role_path }}/vars/{{ ansible_os_family }}.yml"
+  ansible.builtin.include_vars: "{{ role_path }}/vars/{{ ansible_facts['os_family'] }}.yml"
 
 - name: Install nginx
   ansible.builtin.include_tasks: "install-{{ nginx_install_method }}.yml"
