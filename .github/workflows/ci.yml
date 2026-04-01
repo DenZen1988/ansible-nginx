@@ -18,14 +18,14 @@ concurrency:
 jobs:
   lint:
     name: Lint
-    runs-on: self-hosted
+    runs-on: [self-hosted, linux, x64]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.14"
+          python-version: "3.12"
       - name: Install lint dependencies
         run: pip install yamllint ansible-lint
       - name: Run yamllint
@@ -35,7 +35,7 @@ jobs:
 
   molecule:
     name: "Molecule (${{ matrix.scenario }})"
-    runs-on: self-hosted
+    runs-on: [self-hosted, linux, x64]
     needs: lint
     strategy:
       fail-fast: false
@@ -76,12 +76,12 @@ jobs:
         env:
           PY_COLORS: "1"
           ANSIBLE_FORCE_COLOR: "1"
-          MOLECULE_DISTRO: ubuntu2204
+          MOLECULE_DISTRO: debian13
 
   # Summary gate for branch protection
   ci-pass:
     name: CI Passed
-    runs-on: self-hosted
+    runs-on: [self-hosted, linux, x64]
     needs: [lint, molecule]
     if: always()
     steps:
