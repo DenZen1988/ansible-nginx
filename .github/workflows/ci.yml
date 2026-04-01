@@ -18,7 +18,7 @@ concurrency:
 jobs:
   lint:
     name: Lint
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,7 +35,7 @@ jobs:
 
   molecule:
     name: "Molecule (${{ matrix.scenario }})"
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: lint
     strategy:
       fail-fast: false
@@ -81,7 +81,7 @@ jobs:
   # Summary gate for branch protection
   ci-pass:
     name: CI Passed
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: [lint, molecule]
     if: always()
     steps:
