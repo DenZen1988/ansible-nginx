@@ -73,7 +73,6 @@ git clone https://github.com/DenZen1988/ansible-nginx.git roles/ansible-nginx
 
 ```yaml
 roles:
-  # Base
   - name: ansible-nginx
     src: git@github.com:DenZen1988/ansible-nginx.git
     version: "12.13.1"
