@@ -4,19 +4,45 @@
 
 A production-ready, fully variable-driven Ansible role for Nginx on Debian/Ubuntu.
 
+## Table Of Content
+
+* [Features](#features)
+* [Supported Platforms](#supported-platforms)
+* [Requirements](#requirements)
+* [Installation](#installation)
+  * [Ansible Galaxy](#ansible-galaxy)
+  * [Git](#git)
+  * [Requirements.yml](#requirementsyml)
+* [Quick Start](#quick-start)
+  * [Minimal - install Nginx with defaults](#minimal--install-nginx-with-defaults)
+  * [Static Site with Let's Encrypt](#static-site-with-lets-encrypt)
+  * [Reverse Proxy with load balancing](#reverse-proxy-with-load-balancing)
+* [Role Variables](#role-variables)
+  * [Installation](#installation-1)
+  * [Core Configursation](#core-configuration)
+  * [Virtual Hosts](#virtual-hosts)
+  * [SSL/TLS](#ssltls)
+  * [Let's Encrypt](#lets-encrypt)
+  * [Reverse Proxy & Load Balancing](#reverse-proxy--load-balancing)
+* [Variable Precedence: Host vs Group](#variable-precedence-host-vs-group)
+* [Directory Structure](#directory-structure)
+* [License](#license)
+* [Author](#author)
+* [Contribution](#contribution)
+
 ## Features
 
-- **Flexible installation** — apt packages (distro or official nginx.org repo) or compile from source
-- **Full `nginx.conf` control** — every directive configurable via variables
-- **Virtual hosts** — unlimited server blocks via `nginx_vhosts` list
-- **SSL/TLS** — Mozilla Intermediate defaults, DH params, HSTS, OCSP stapling
-- **Let's Encrypt** — automated Certbot certificate issuance and renewal
-- **Custom certificates** — deploy your own certs from local files
-- **Reverse proxy** — proxy headers snippet, timeouts, buffering, WebSocket support
-- **Load balancing** — upstream groups with round-robin, least_conn, ip_hash, random
-- **TCP/UDP stream proxy** — raw stream blocks for database proxying, etc.
-- **Monitoring** — optional stub_status endpoint
-- **Fully composable** — override anything at group or host level
+* **Flexible installation** — apt packages (distro or official nginx.org repo) or compile from source
+* **Full `nginx.conf` control** — every directive configurable via variables
+* **Virtual hosts** — unlimited server blocks via `nginx_vhosts` list
+* **SSL/TLS** — Mozilla Intermediate defaults, DH params, HSTS, OCSP stapling
+* **Let's Encrypt** — automated Certbot certificate issuance and renewal
+* **Custom certificates** — deploy your own certs from local files
+* **Reverse proxy** — proxy headers snippet, timeouts, buffering, WebSocket support
+* **Load balancing** — upstream groups with round-robin, least_conn, ip_hash, random
+* **TCP/UDP stream proxy** — raw stream blocks for database proxying, etc.
+* **Monitoring** — optional stub_status endpoint
+* **Fully composable** — override anything at group or host level
 
 ## Supported Platforms
 
@@ -27,22 +53,31 @@ A production-ready, fully variable-driven Ansible role for Nginx on Debian/Ubunt
 
 ## Requirements
 
-- Ansible ≥ 2.14
-- `community.crypto` collection (for DH param generation): `ansible-galaxy collection install community.crypto`
-- `community.general` collection (for source compilation): `ansible-galaxy collection install community.general`
+* Ansible ≥ 2.14
+* `community.crypto` collection (for DH param generation): `ansible-galaxy collection install community.crypto`
+* `community.general` collection (for source compilation): `ansible-galaxy collection install community.general`
 
 ## Installation
 
 ### Ansible Galaxy
 
-```bash
-ansible-galaxy install DenZen1988.nginx
-```
+Not published there.
 
 ### Git
 
 ```bash
 git clone https://github.com/DenZen1988/ansible-nginx.git roles/ansible-nginx
+```
+
+### Requirements.yml
+
+```yaml
+roles:
+  # Base
+  - name: ansible-nginx
+    src: git@github.com:DenZen1988/ansible-nginx.git
+    version: "12.13.1"
+    scm: git
 ```
 
 ## Quick Start
@@ -195,9 +230,9 @@ for a pattern.
 
 To work around this, consider:
 
-- Using `hash_behaviour: merge` (not recommended globally)
-- Using a custom variable like `nginx_vhosts_extra` and combining in the playbook
-- Keeping host-specific sites in separate variables and combining with `+`
+* Using `hash_behaviour: merge` (not recommended globally)
+* Using a custom variable like `nginx_vhosts_extra` and combining in the playbook
+* Keeping host-specific sites in separate variables and combining with `+`
 
 ## Directory Structure
 
@@ -228,10 +263,13 @@ ansible-nginx/
 │   └── nginx.service.j2      # Systemd unit (source)
 ├── handlers/main.yml
 ├── meta/main.yml
-├── examples/
-│   ├── playbook.yml
-│   └── inventory/
+├── molecule/
+│   ├── default/
+│   └── reverse_proxy/
+|   └── source/
+|   └── ssl/
 └── README.md
+└── CHANGELOG.md
 ```
 
 ## License
@@ -241,3 +279,22 @@ MIT
 ## Author
 
 Denis Walther — [GitHub](https://github.com/DenZen1988)
+
+## Versioning
+
+The versioning follows a simple pattern:
+
+| Minimum OS Version Suppoprted | Ansible Version | Patchversion |
+| --- | --- | --- |
+| Debian 11 -> 11 | Ansible 13 -> 13 | First working version -> 1 |
+
+This will equal to version `v11.13.1`.
+
+## Contribution
+
+You are more than welcome to create pull requests for new features and functions:
+
+1. Create a new branch
+2. Adjust or add the code desired
+3. Ensure the molecule tests are good to go
+4. Create a PR

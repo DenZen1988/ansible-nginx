@@ -3,9 +3,9 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, default]
   pull_request:
-    branches: [main, master]
+    branches: [main, master, default]
   schedule:
     # Weekly on Sundays to catch upstream breakage
     - cron: "0 6 * * 0"
@@ -36,6 +36,16 @@ jobs:
         run: |
           source .venv/bin/activate
           ansible-lint
+      - name: Run jinja2-lint
+        run: |
+          source .venv/bin/activate
+          pip install djlint
+          djlint templates/*.j2 --profile=jinja
+      - name: Run markdownlint
+        run: |
+          source .venv/bin/activate
+          pip install markdownlint-cli
+          markdownlint README.md CHANGELOG.md
 
   molecule:
     name: "Molecule (${{ matrix.scenario }})"
