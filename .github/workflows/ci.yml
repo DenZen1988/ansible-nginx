@@ -40,12 +40,11 @@ jobs:
         run: |
           source .venv/bin/activate
           pip install djlint
-          djlint templates/*.j2 --profile=jinja
+          djlint templates/*.j2 --profile=jinja2
       - name: Run markdownlint
         run: |
-          source .venv/bin/activate
-          pip install markdownlint-cli
-          markdownlint README.md CHANGELOG.md
+          npm install -g markdownlint-cli
+          markdownlint .
 
   molecule:
     name: "Molecule (${{ matrix.scenario }})"
