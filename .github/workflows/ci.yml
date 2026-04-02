@@ -16,8 +16,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint:
-    name: Lint
+  ansible-lint:
+    name: Ansible-Lint
     runs-on: [self-hosted, linux, x64]
     steps:
       - name: Checkout
@@ -27,7 +27,7 @@ jobs:
           python3 -m venv .venv
           source .venv/bin/activate
           pip install --upgrade pip
-          pip install yamllint ansible-lint
+          pip install yamllint ansible-lint djlint
       - name: Run yamllint
         run: |
           source .venv/bin/activate
@@ -39,17 +39,27 @@ jobs:
       - name: Run jinja2-lint
         run: |
           source .venv/bin/activate
-          pip install djlint
           djlint templates/*.j2 --profile=jinja2
-      - name: Run markdownlint
+
+  markdownlint:
+    name: Markdown-Lint
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up venv and install lint dependencies
         run: |
-          npm install -g markdownlint-cli
-          markdownlint .
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip
+          pip install markdownlint-cli
+      - name: Run markdownlint
+        run: markdownlint .
 
   molecule:
     name: "Molecule (${{ matrix.scenario }})"
     runs-on: [self-hosted, linux, x64]
-    needs: lint
+    needs: ansible-lint
     strategy:
       fail-fast: false
       matrix:
@@ -95,12 +105,13 @@ jobs:
   ci-pass:
     name: CI Passed
     runs-on: [self-hosted, linux, x64]
-    needs: [lint, molecule]
+    needs: [ansible-lint, markdownlint, molecule]
     if: always()
     steps:
       - name: Check results
         run: |
-          if [[ "${{ needs.lint.result }}" != "success" ]] || \
+          if [[ "${{ needs.ansible-lint.result }}" != "success" ]] || \
+             [[ "${{ needs.markdownlint.result }}" != "success" ]] || \
              [[ "${{ needs.molecule.result }}" != "success" ]]; then
             echo "::error::One or more jobs failed"
             exit 1
